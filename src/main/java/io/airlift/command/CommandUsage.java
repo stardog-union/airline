@@ -276,13 +276,19 @@ public class CommandUsage
             aBuilder.append(command.getDiscussion());
         }
 
-        if (command.getExamples() != null && !command.getExamples().isEmpty()) {
+        List<String> examples = command.getExamples();
+        if (examples != null && !examples.isEmpty()) {
             aBuilder.append(NEW_PARA).append("## EXAMPLES");
 
             // this will only work for "well-formed" examples
-            for (int i = 0; i < command.getExamples().size(); i+=3) {
-                String aText = command.getExamples().get(i).trim();
-                String aEx = htmlize(command.getExamples().get(i+1));
+            if (examples.size() != 0 &&
+                examples.size() % 3 != 2 &&
+                (examples.size() % 3 != 0 || !examples.get(examples.size() - 1).trim().equals(""))) {
+                throw new IllegalArgumentException("Examples must be an array two-element terms separated by a blank string element");
+            }
+            for (int i = 0; i < examples.size(); i+=3) {
+                String aText = examples.get(i).trim();
+                String aEx = htmlize(examples.get(i + 1));
 
                 if (aText.startsWith("*")) {
                     aText = aText.substring(1).trim();
@@ -292,8 +298,9 @@ public class CommandUsage
                 aBuilder.append(aEx);
             }
         }
+        throw new IllegalArgumentException("Examples must be an array two-element terms separated by a blank string element");
 
-        return aBuilder.toString();
+//        return aBuilder.toString();
     }
 
     public String usageHTML(@Nullable String programName, @Nullable String groupName, CommandMetadata command) {
