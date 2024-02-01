@@ -36,6 +36,7 @@ import io.airlift.command.args.Arity1;
 import io.airlift.command.args.OptionsRequired;
 import io.airlift.command.command.CommandAdd;
 import io.airlift.command.command.CommandCommit;
+import io.airlift.command.command.CommandMain;
 import io.airlift.command.model.CommandMetadata;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;

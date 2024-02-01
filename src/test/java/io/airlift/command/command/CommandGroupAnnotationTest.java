@@ -2,6 +2,7 @@ package io.airlift.command.command;
 
 import java.util.Arrays;
 
+import io.airlift.command.ParseGlobalOptionUnexpectedException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -190,8 +191,54 @@ public class CommandGroupAnnotationTest
                 .build();
 
         Object command = parser.parse("commandWithGroupNames", "-i", "A.java");
-
     }
 
-    
+    @Test
+    public void globalOptionCommandAdd()
+    {
+        Cli<?> parser = Cli.buildCli("junk")
+                           .withCommand(CommandWithGroupAnnotation.class)
+                           .build();
+
+        Object command;
+        command = parser.parse("singleGroup", "add");
+        Assert.assertNotNull(command, "command is null");
+        Assert.assertTrue(command instanceof CommandAdd);
+        CommandAdd commandAdd = (CommandAdd) command;
+        Assert.assertTrue(commandAdd.commandMain == null || !commandAdd.commandMain.verbose);
+
+        command = parser.parse("-v", "singleGroup", "add");
+        Assert.assertNotNull(command, "command is null");
+        Assert.assertTrue(command instanceof CommandAdd);
+        Assert.assertTrue(((CommandAdd) command).commandMain.verbose);
+    }
+
+    @Test
+    public void globalOptionCommandStop()
+    {
+        Cli<?> parser = Cli.buildCli("junk")
+                           .withCommand(CommandWithGroupAnnotation.class)
+                           .build();
+
+        Object command;
+        command = parser.parse("singleGroup", "stop");
+        Assert.assertNotNull(command, "command is null");
+        Assert.assertTrue(command instanceof CommandStop);
+        Assert.assertFalse(((CommandStop) command).verbose);
+
+        command = parser.parse("-v", "singleGroup", "stop");
+        Assert.assertNotNull(command, "command is null");
+        Assert.assertTrue(command instanceof CommandStop);
+        Assert.assertTrue(((CommandStop) command).verbose);
+    }
+
+    @Test(expectedExceptions = ParseGlobalOptionUnexpectedException.class)
+    public void globalOptionCommandStart()
+    {
+        Cli<?> parser = Cli.buildCli("junk")
+                           .withCommand(CommandWithGroupAnnotation.class)
+                           .build();
+
+        parser.parse("-v", "singleGroup", "start");
+    }
 }
