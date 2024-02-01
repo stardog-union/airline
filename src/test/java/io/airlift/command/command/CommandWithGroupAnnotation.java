@@ -7,7 +7,8 @@ import io.airlift.command.Command;
 import io.airlift.command.Group;
 import io.airlift.command.Option;
 
-@Group(name = "singleGroup", description = "a single group", defaultCommand = CommandWithGroupAnnotation.class,commands = {CommandAdd.class})
+@Group(name = "singleGroup", description = "a single group", defaultCommand = CommandWithGroupAnnotation.class,
+        commands = { CommandAdd.class, CommandStart.class, CommandStop.class })
 @Command(name = "commandWithGroup", description = "A command with a group annotation")
 public class CommandWithGroupAnnotation
 {

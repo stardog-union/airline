@@ -234,6 +234,13 @@ public class Cli<C>
                 throw new ParseOptionMissingException(option.getOptions().iterator().next());
             }
         }
+
+        for (OptionMetadata optionMetadata : state.getParsedOptions().keys()) {
+            List<OptionMetadata> allOptions = command.getAllOptions();
+            if (!allOptions.contains(optionMetadata)) {
+                throw new ParseGlobalOptionUnexpectedException(optionMetadata);
+            }
+        }
     }
 
     //
