@@ -36,7 +36,7 @@ import io.airlift.command.args.Arity1;
 import io.airlift.command.args.OptionsRequired;
 import io.airlift.command.command.CommandAdd;
 import io.airlift.command.command.CommandCommit;
-import io.airlift.command.command.CommandMain;
+import io.airlift.command.args.OneArg;
 import io.airlift.command.model.CommandMetadata;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -382,5 +382,16 @@ public class CommandTest
             public long l;
         }
         singleCommandParser(A.class).parse("-lon", "32");
+    }
+
+    public void oneArgument()
+    {
+        singleCommandParser(OneArg.class).parse("OneArg", "arg1");
+    }
+
+    @Test(expectedExceptions = ParseException.class)
+    public void extraArguments()
+    {
+        singleCommandParser(OneArg.class).parse("OneArg", "arg1", "arg2");
     }
 }

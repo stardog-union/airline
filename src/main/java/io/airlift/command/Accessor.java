@@ -89,7 +89,11 @@ public class Accessor
         return instance;
     }
 
-    public void addValues(Object commandInstance, Iterable<?> values)
+    public void addValues(Object commandInstance, Iterable<?> values) {
+        addValues(commandInstance, values, name);
+    }
+
+    public void addValues(Object commandInstance, Iterable<?> values, String argTitle)
     {
         if (Iterables.isEmpty(values)) {
             return;
@@ -105,6 +109,9 @@ public class Accessor
             Iterables.addAll(collection, values);
         }
         else {
+            if (Iterables.size(values) > 1) {
+                throw new ParseException("Maximum of one argument allowed for argument \"%s\". Actual arguments: %s", argTitle, values);
+            }
             try {
                 field.set(instance, Iterables.getLast(values));
             }

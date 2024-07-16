@@ -266,6 +266,79 @@ public class ParametersDelegateTest
     public void conflictingMainParametersAreNotAllowed()
     {
         singleCommandParser(ConflictingMainParametersAreNotAllowed.class).parse("command", "main", "params");
+    }
 
+    // ========================================================================================================================
+
+    @Command(name = "command")
+    public static class DuplicateParentChildParametersAreAllowed
+    {
+        public static class Delegate
+        {
+            @Arguments
+            public List<String> mainParams = newArrayList();
+        }
+
+        @Inject
+        public Delegate delegate = new Delegate();
+
+        @Arguments
+        public List<String> mainParams = newArrayList();
+    }
+
+    @Test
+    public void duplicateParentChildParametersAreAllowed()
+    {
+        DuplicateParentChildParametersAreAllowed value = singleCommandParser(DuplicateParentChildParametersAreAllowed.class).parse("command", "main", "params");
+        Assert.assertEquals(value.mainParams, ImmutableList.of("main", "params"));
+        Assert.assertEquals(value.delegate.mainParams, ImmutableList.of("main", "params"));
+    }
+
+    // ========================================================================================================================
+
+    @Command(name = "command")
+    public static class ConflictingParentChildParametersAreNotAllowed
+    {
+        public static class Delegate
+        {
+            @Arguments
+            public List<String> mainParams = newArrayList();
+        }
+
+        @Inject
+        public Delegate delegate = new Delegate();
+
+        @Arguments
+        public String mainParam;
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void conflictingParentChildParametersAreNotAllowed()
+    {
+        singleCommandParser(ConflictingParentChildParametersAreNotAllowed.class).parse("command", "param");
+    }
+
+    // ========================================================================================================================
+
+    @Command(name = "command")
+    public static class ExtraParametersAreNotAllowed
+    {
+        public static class Delegate
+        {
+            @Arguments
+            public String mainParam;
+        }
+
+        @Inject
+        public Delegate delegate = new Delegate();
+
+        @Arguments
+        public String mainParam;
+    }
+
+    @Test(expectedExceptions = ParseException.class)
+    public void extraParametersAreNotAllowed()
+    {
+        singleCommandParser(ExtraParametersAreNotAllowed.class).parse("command", "main", "params");
     }
 }

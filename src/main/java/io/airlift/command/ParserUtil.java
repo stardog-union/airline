@@ -62,7 +62,13 @@ public class ParserUtil
         // inject args
         if (arguments != null && parsedArguments != null) {
             for (Accessor accessor : arguments.getAccessors()) {
-                accessor.addValues(commandInstance, parsedArguments);
+                List<String> titles = arguments.getTitle();
+	            if (titles == null || titles.isEmpty()) {
+	                accessor.addValues(commandInstance, parsedArguments);
+	            }
+	            else {
+	                accessor.addValues(commandInstance, parsedArguments, titles.get(0));
+	            }
             }
         }
   

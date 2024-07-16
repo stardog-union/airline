@@ -17,9 +17,14 @@ public class AllTests {
     public void testSuite() {
         TestNG aTestNG = new TestNG();
 
-        aTestNG.setTestClasses(new Class[] { CommandTest.class, io.airlift.command.CommandTest.class,
-                                             ParametersDelegateTest.class, HelpTest.class, GitTest.class, GalaxyCommandLineParser.class,
-                                             CommandGroupAnnotationTest.class });
+        aTestNG.setTestClasses(new Class[] {
+                CommandTest.class,
+                io.airlift.command.CommandTest.class,
+                ParametersDelegateTest.class,
+                HelpTest.class, GitTest.class,
+                GalaxyCommandLineParser.class,
+                CommandGroupAnnotationTest.class
+        });
 
         aTestNG.run();
 
