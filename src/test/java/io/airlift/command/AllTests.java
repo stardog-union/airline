@@ -5,8 +5,6 @@ import org.testng.TestNG;
 import org.testng.annotations.BeforeSuite;
 
 /**
- * <p></p>
- *
  * @author  Michael Grove
  * @since   0.6
  * @version 0.6
@@ -19,9 +17,9 @@ public class AllTests {
 
         aTestNG.setTestClasses(new Class[] {
                 CommandTest.class,
-                io.airlift.command.CommandTest.class,
                 ParametersDelegateTest.class,
-                HelpTest.class, GitTest.class,
+                HelpTest.class,
+                GitTest.class,
                 GalaxyCommandLineParser.class,
                 CommandGroupAnnotationTest.class
         });

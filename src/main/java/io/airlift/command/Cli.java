@@ -18,23 +18,21 @@
 
 package io.airlift.command;
 
-import com.google.common.base.Function;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-
 import io.airlift.command.model.ArgumentsMetadata;
 import io.airlift.command.model.CommandGroupMetadata;
 import io.airlift.command.model.CommandMetadata;
 import io.airlift.command.model.GlobalMetadata;
 import io.airlift.command.model.MetadataLoader;
 import io.airlift.command.model.OptionMetadata;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
@@ -45,7 +43,7 @@ public class Cli<C>
     public static <T> CliBuilder<T> builder(String name)
     {
         Preconditions.checkNotNull(name, "name is null");
-        return new CliBuilder<T>(name);
+        return new CliBuilder<>(name);
     }
 
     @Deprecated
@@ -65,13 +63,13 @@ public class Cli<C>
     private final CommandFactory<C> mCommandFactory;
 
     private Cli(String name,
-            String description,
-            TypeConverter typeConverter,
-            Class<? extends C> defaultCommand,
-            CommandFactory<C> theCommandFactory,
-            Iterable<Class<? extends C>> defaultGroupCommands,
-            Iterable<GroupBuilder<C>> groups)
-    {
+                Integer navOrder,
+                String description,
+                TypeConverter typeConverter,
+                Class<? extends C> defaultCommand,
+                CommandFactory<C> theCommandFactory,
+                Iterable<Class<? extends C>> defaultGroupCommands,
+                Iterable<GroupBuilder<C>> groups) {
         Preconditions.checkNotNull(name, "name is null");
         Preconditions.checkNotNull(typeConverter, "typeConverter is null");
         Preconditions.checkNotNull(theCommandFactory);
@@ -83,32 +81,28 @@ public class Cli<C>
             defaultCommandMetadata = MetadataLoader.loadCommand(defaultCommand);
         }
 
-        final List<CommandMetadata> allCommands = new ArrayList<CommandMetadata>();
+        final List<CommandMetadata> allCommands = new ArrayList<>();
         
         List<CommandMetadata> defaultCommandGroup = Lists.newArrayList(MetadataLoader.loadCommands(defaultGroupCommands));
 
-        // currentlly the default command is required to be in the commands list. If that changes, we'll need to add it here and add checks for existence
+        // currently the default command is required to be in the commands list. If that changes, we'll need to add it here and add checks for existence
         allCommands.addAll(defaultCommandGroup);
         
-        List<CommandGroupMetadata> commandGroups = Lists.newArrayList(Iterables.transform(groups, new Function<GroupBuilder<C>, CommandGroupMetadata>()
-        {
-            public CommandGroupMetadata apply(GroupBuilder<C> group)
-            {
-                CommandMetadata groupDefault = MetadataLoader.loadCommand(group.defaultCommand);
-                List<CommandMetadata> groupCommands = MetadataLoader.loadCommands(group.commands);
+        List<CommandGroupMetadata> commandGroups = Lists.newArrayList(Iterables.transform(groups, group -> {
+            CommandMetadata groupDefault = MetadataLoader.loadCommand(group.defaultCommand);
+            List<CommandMetadata> groupCommands = MetadataLoader.loadCommands(group.commands);
 
-                // currentlly the default command is required to be in the commands list. If that changes, we'll need to add it here and add checks for existence
-                allCommands.addAll(groupCommands);
+            // currentlly the default command is required to be in the commands list. If that changes, we'll need to add it here and add checks for existence
+            allCommands.addAll(groupCommands);
 
-                return MetadataLoader.loadCommandGroup(group.name, group.description, groupDefault, groupCommands);
-            }
+            return MetadataLoader.loadCommandGroup(group.name, group.description, group.markdownDescription, groupDefault, groupCommands);
         }));
 
         // add commands to groups based on the value of groups in the @Command annotations
         // rather than change the entire way metadata is loaded, I figured just post-processing was an easier, yet uglier, way to go
         MetadataLoader.loadCommandsIntoGroupsByAnnotation(allCommands,commandGroups, defaultCommandGroup);
         
-        this.metadata = MetadataLoader.loadGlobal(name, description, defaultCommandMetadata, ImmutableList.copyOf(defaultCommandGroup), ImmutableList.copyOf(commandGroups));
+        this.metadata = MetadataLoader.loadGlobal(name, navOrder, description, defaultCommandMetadata, ImmutableList.copyOf(defaultCommandGroup), ImmutableList.copyOf(commandGroups));
     }
 
     public GlobalMetadata getMetadata()
@@ -192,15 +186,13 @@ public class Cli<C>
 
         bindings.put(CommandMetadata.class, command);
 
-        C c = (C) ParserUtil.injectOptions(commandInstance,
-            command.getAllOptions(),
-            state.getParsedOptions(),
-            command.getArguments(),
-            state.getParsedArguments(),
-            command.getMetadataInjections(),
-            bindings.build());
-        
-        return c;
+	    return ParserUtil.injectOptions(commandInstance,
+		                                command.getAllOptions(),
+		                                state.getParsedOptions(),
+		                                command.getArguments(),
+		                                state.getParsedArguments(),
+		                                command.getMetadataInjections(),
+		                                bindings.build());
     }
     
     private void validate(ParseState state)
@@ -250,13 +242,14 @@ public class Cli<C>
     public static class CliBuilder<C>
     {
         protected final String name;
+        protected Integer navOrder;
         protected String description;
         protected TypeConverter typeConverter = new TypeConverter();
         protected String optionSeparators;
         private Class<? extends C> defaultCommand;
         private final List<Class<? extends C>> defaultCommandGroupCommands = newArrayList();
         protected final Map<String, GroupBuilder<C>> groups = newHashMap();
-        protected CommandFactory<C> commandFactory = new CommandFactoryDefault<C>();
+        protected CommandFactory<C> commandFactory = new CommandFactoryDefault<>();
 
         public CliBuilder(String name)
         {
@@ -265,14 +258,23 @@ public class Cli<C>
             this.name = name;
         }
 
+        public CliBuilder<C> withNavOrder(Integer navOrder)
+        {
+            Preconditions.checkNotNull(navOrder, "nav_order for CLI %s is null", name);
+            Preconditions.checkState(this.navOrder == null, "nav_order for CLI %s is already set to %s", name, this.navOrder);
+            this.navOrder = navOrder;
+            return this;
+        }
+
         public CliBuilder<C> withDescription(String description)
         {
-            Preconditions.checkNotNull(description, "description is null");
-            Preconditions.checkArgument(!description.isEmpty(), "description is empty");
+            Preconditions.checkNotNull(description, "description for CLI %s is null", name);
+            Preconditions.checkArgument(!description.isEmpty(), "description for CLI %s is empty", name);
+            Preconditions.checkState(this.description == null, "description for CLI %s is already set to %s", name, this.description);
             this.description = description;
             return this;
         }
-        
+
         public CliBuilder<C> withCommandFactory(CommandFactory<C> commandFactory) 
         {
             this.commandFactory = commandFactory;
@@ -328,7 +330,7 @@ public class Cli<C>
                 return groups.get(name);
             }
 
-            GroupBuilder<C> group = new GroupBuilder<C>(name);
+            GroupBuilder<C> group = new GroupBuilder<>(name);
             groups.put(name, group);
             return group;
         }
@@ -343,7 +345,7 @@ public class Cli<C>
 
         public Cli<C> build()
         {
-            return new Cli<C>(name, description, typeConverter, defaultCommand, commandFactory, defaultCommandGroupCommands, groups.values());
+            return new Cli<>(name, navOrder, description, typeConverter, defaultCommand, commandFactory, defaultCommandGroupCommands, groups.values());
         }
     }
 
@@ -351,6 +353,7 @@ public class Cli<C>
     {
         private final String name;
         private String description = null;
+        private String markdownDescription = null;
         private Class<? extends C> defaultCommand = null;
 
         private final List<Class<? extends C>> commands = newArrayList();
@@ -363,24 +366,34 @@ public class Cli<C>
 
         public GroupBuilder<C> withDescription(String description)
         {
-            Preconditions.checkNotNull(description, "description is null");
-            Preconditions.checkArgument(!description.isEmpty(), "description is empty");
-            Preconditions.checkState(this.description == null, "description is already set");
+            Preconditions.checkNotNull(description, "description for group %s is null", name);
+            Preconditions.checkArgument(!description.isEmpty(), "description for group %s is empty", name);
+            Preconditions.checkState(this.description == null, "description for group %s is already set to %s", name, this.description);
             this.description = description;
+            return this;
+        }
+
+        public GroupBuilder<C> withMarkdownDescription(String markdownDescription)
+        {
+            Preconditions.checkNotNull(markdownDescription, "markdown description for group %s is null", name);
+            Preconditions.checkArgument(!markdownDescription.isEmpty(), "markdown description for group %s is empty", name);
+            Preconditions.checkState(this.markdownDescription == null, "markdown description for group %s is already set to %s", name, this.markdownDescription);
+            this.markdownDescription = markdownDescription;
             return this;
         }
 
         public GroupBuilder<C> withDefaultCommand(Class<? extends C> defaultCommand)
         {
-            Preconditions.checkNotNull(defaultCommand, "defaultCommand is null");
-            Preconditions.checkState(this.defaultCommand == null, "defaultCommand is already set");
+            Preconditions.checkNotNull(defaultCommand, "defaultCommand for group %s is null", name);
+            String existingName = this.defaultCommand == null ? null : this.defaultCommand.getName();
+            Preconditions.checkState(this.defaultCommand == null, "defaultCommand for group %s is already set to %s", name, existingName);
             this.defaultCommand = defaultCommand;
             return this;
         }
 
         public GroupBuilder<C> withCommand(Class<? extends C> command)
         {
-            Preconditions.checkNotNull(command, "command is null");
+            Preconditions.checkNotNull(command, "command for group %s is null", name);
             commands.add(command);
             return this;
         }

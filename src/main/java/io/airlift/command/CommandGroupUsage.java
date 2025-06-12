@@ -1,18 +1,20 @@
 package io.airlift.command;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import javax.annotation.Nullable;
+
 import com.google.common.base.Preconditions;
-import com.google.common.base.Objects;
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import io.airlift.command.model.CommandGroupMetadata;
 import io.airlift.command.model.CommandMetadata;
 import io.airlift.command.model.GlobalMetadata;
 import io.airlift.command.model.OptionMetadata;
-import io.airlift.command.model.ArgumentsMetadata;
-
-import javax.annotation.Nullable;
-import java.util.*;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newTreeMap;
@@ -56,7 +58,7 @@ public class CommandGroupUsage
     {
         StringBuilder stringBuilder = new StringBuilder();
         usage(global, group, stringBuilder);
-        System.out.println(stringBuilder.toString());
+        System.out.println(stringBuilder);
     }
 
     /**
@@ -135,7 +137,7 @@ public class CommandGroupUsage
             synopsis.append(" | ").append(allCommandNames.get(i));
         }
         synopsis.append("} [--]");
-        if (commonGroupOptions.size() > 0) {
+        if (!commonGroupOptions.isEmpty()) {
             synopsis.appendWords(UsageHelper.toSynopsisUsage(commonGroupOptions));
         }
         if (hasCommandSpecificOptions) {
@@ -157,7 +159,7 @@ public class CommandGroupUsage
                     thisCmdOptions.removeAll(commonGroupOptions);
                     StringBuilder optSB = new StringBuilder();
                     for (String s : UsageHelper.toSynopsisUsage(thisCmdOptions)) {
-                        optSB.append(s + " ");
+                        optSB.append(s).append(" ");
                     }
                     cmdOptions.put(command.getName(), optSB.toString());
                 }
@@ -180,7 +182,7 @@ public class CommandGroupUsage
                 args.append(arg + ": " + cmdArguments.get(arg)).newline();
             }
         }
-        if (defaultCommand != "") {
+        if (!Objects.equals(defaultCommand, "")) {
             synopsis.newline().append(String.format("* %s is the default command", defaultCommand));
         }
         synopsis.newline().append("See").append("'" + global.getName()).append("help ").append(group.getName()).appendOnOneLine(" <command>' for more information on a specific command.").newline();
@@ -193,9 +195,9 @@ public class CommandGroupUsage
         if (global != null && !hideGlobalOptions) {
             options.addAll(global.getOptions());
         }
-        if (options.size() > 0) {
+        if (!options.isEmpty()) {
             if (optionComparator != null) {
-                Collections.sort(options, optionComparator);
+                options.sort(optionComparator);
             }
 
             out.append("OPTIONS").newline();
@@ -229,5 +231,58 @@ public class CommandGroupUsage
             }
         }
         return longest;
+    }
+
+    public String usageMD(GlobalMetadata global, CommandGroupMetadata group) {
+        List<CommandMetadata> commands = ImmutableList.sortedCopyOf(Comparator.comparing(CommandMetadata::getName),
+                                                                    group.getCommands());
+
+        StringBuilder builder = new StringBuilder();
+
+        // for jekyll to pick up these pages on the website
+        builder.append("---\n");
+        builder.append("layout: default\n");
+        builder.append("title: ").append(group.getName()).append("\n");
+
+        if (global.getName().equals("stardog")){
+            builder.append("parent: Stardog CLI Reference\n");
+        }
+        else {
+            builder.append("parent: Stardog Admin CLI Reference\n");
+        }
+        builder.append("has_children: ").append(!commands.isEmpty()).append("\n");
+        builder.append("has_toc: false\n");
+        builder.append("description: This page contains the commands available in the ")
+               .append(global.getName())
+               .append(" ")
+               .append(group.getName())
+               .append(" command group.\n");
+        builder.append("---\n\n");
+        builder.append("# `").append(group.getName()).append("`\n\n");
+	    builder.append(!Strings.isNullOrEmpty(group.getMarkdownDescription())
+	                   ? group.getMarkdownDescription()
+	                   : group.getDescription());
+        builder.append("\n");
+        if (!commands.isEmpty()) {
+            builder.append("\n\n");
+            builder.append("Select any of the commands to view their manual page.\n\n");
+            builder.append("| Command | Description |\n");
+            builder.append("|---------|-------------|\n");
+            for (CommandMetadata command: commands) {
+                builder.append("| [`")
+                       .append(group.getName())
+                       .append(" ")
+                       .append(command.getName())
+                       .append("`](./")
+                       .append(group.getName())
+                       .append("-")
+                       .append(command.getName())
+                       .append(") | ")
+                       .append(command.getDescription())
+                       .append(" |\n");
+            }
+        }
+
+        return builder.toString();
     }
 }

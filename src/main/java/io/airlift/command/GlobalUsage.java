@@ -1,18 +1,18 @@
 package io.airlift.command;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import io.airlift.command.model.CommandGroupMetadata;
 import io.airlift.command.model.CommandMetadata;
 import io.airlift.command.model.GlobalMetadata;
 import io.airlift.command.model.OptionMetadata;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static io.airlift.command.UsageHelper.DEFAULT_COMMAND_COMPARATOR;
 import static io.airlift.command.UsageHelper.DEFAULT_OPTION_COMPARATOR;
 
 public class GlobalUsage
@@ -44,11 +44,11 @@ public class GlobalUsage
     {
         StringBuilder stringBuilder = new StringBuilder();
         usage(global, stringBuilder);
-        System.out.println(stringBuilder.toString());
+        System.out.println(stringBuilder);
     }
 
     /**
-     * Store the help in the passed string builder.
+     * Store the help in the passed-in string builder.
      */
     public void usage(GlobalMetadata global, StringBuilder out)
     {
@@ -84,9 +84,9 @@ public class GlobalUsage
         // OPTIONS
         //
         List<OptionMetadata> options = newArrayList(global.getOptions());
-        if (options.size() > 0) {
+        if (!options.isEmpty()) {
             if (optionComparator != null) {
-                Collections.sort(options, optionComparator);
+                options.sort(optionComparator);
             }
 
             out.append("OPTIONS").newline();
@@ -139,5 +139,81 @@ public class GlobalUsage
             }
             commandPrinter.newline();
         }
+    }
+
+    public String usageMD(GlobalMetadata global) {
+        List<CommandGroupMetadata> groups = ImmutableList.sortedCopyOf(Comparator.comparing(CommandGroupMetadata::getName),
+                                                                       global.getCommandGroups());
+        List<CommandMetadata> commands = ImmutableList.sortedCopyOf(Comparator.comparing(CommandMetadata::getName),
+                                                                    global.getDefaultGroupCommands());
+
+        StringBuilder builder = new StringBuilder();
+
+        // for jekyll to pick up these pages on the website
+        builder.append("---\n");
+        builder.append("layout: default\n");
+        String friendlyName = "stardog".equals(global.getName())
+                              ? "Stardog CLI Reference"
+                              : "stardog-admin".equals(global.getName())
+                                ? "Stardog Admin CLI Reference"
+                                : global.getName();
+        builder.append("title: ").append(friendlyName).append("\n");
+        if (global.getNavOrder() != null) {
+            builder.append("nav_order: ").append(global.getNavOrder()).append("\n");
+        }
+        builder.append("has_children: true\n");
+        builder.append("has_toc: false\n");
+        builder.append("description: This chapter contains details of all ")
+               .append(global.getName())
+               .append(" CLI commands.\n");
+        builder.append("---\n\n");
+
+        builder.append("# ").append(friendlyName).append("\n");
+
+        if (!Strings.isNullOrEmpty(global.getDescription())) {
+            builder.append("\n");
+            builder.append(global.getDescription());
+            builder.append("\n");
+        }
+
+//        if (!commands.isEmpty()) {
+//            builder.append("\n");
+//            builder.append("Below you'll find all the top-level commands in the `")
+//                   .append(global.getName())
+//                   .append("` default group. Select any of the commands in the table below to view detailed help for that command.");
+//            builder.append("\n\n");
+//            builder.append("| Command | Description |\n");
+//            builder.append("|---------|-------------|\n");
+//            for (CommandMetadata command : commands) {
+//                builder.append("| [`")
+//                       .append(command.getName())
+//                       .append("`](./")
+//                       .append(command.getName())
+//                       .append(") | ")
+//                       .append(command.getDescription())
+//                       .append(" |\n");
+//            }
+//        }
+
+        if (!groups.isEmpty()) {
+            builder.append("\n");
+            builder.append("Below you'll find all command groups in the `")
+                   .append(global.getName())
+                   .append("` client. Select any of the command groups in the table below to view the specific commands in that command group.");
+            builder.append("\n\n");
+            builder.append("| Command Group | Description |\n");
+            builder.append("|---------------|-------------|\n");
+            for (CommandGroupMetadata group: groups) {
+                builder.append("| [`")
+                       .append(group.getName())
+                       .append("`](./")
+                       .append(group.getName())
+                       .append(") | ")
+                       .append(group.getDescription())
+                       .append(" |\n");
+            }
+        }
+
+        return builder.toString();
     }
 }

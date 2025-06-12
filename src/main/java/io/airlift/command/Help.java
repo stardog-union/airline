@@ -45,7 +45,7 @@ public class Help implements Runnable, Callable<Void> {
     {
         StringBuilder stringBuilder = new StringBuilder();
         help(command, stringBuilder);
-        System.out.println(stringBuilder.toString());
+        System.out.println(stringBuilder);
     }
 
     public static void help(CommandMetadata command, StringBuilder out) throws UnsupportedOperationException
@@ -57,7 +57,7 @@ public class Help implements Runnable, Callable<Void> {
     {
         StringBuilder stringBuilder = new StringBuilder();
         help(global, commandNames, stringBuilder);
-        System.out.println(stringBuilder.toString());
+        System.out.println(stringBuilder);
     }
 
     public static void help(GlobalMetadata global, List<String> commandNames, StringBuilder out) throws UnsupportedOperationException
@@ -71,7 +71,18 @@ public class Help implements Runnable, Callable<Void> {
 
         // main program?
         if (name.equals(global.getName())) {
-            new GlobalUsage().usage(global, out);
+            if (USAGE_AS_HTML) {
+                throw new UnsupportedOperationException("Global usage not supported in HTML format");
+            }
+            else if (USAGE_AS_RONN) {
+                throw new UnsupportedOperationException("Global usage not supported in RONN format");
+            }
+            else if (USAGE_AS_MD) {
+                out.append(new GlobalUsage().usageMD(global));
+            }
+            else {
+                new GlobalUsage().usage(global, out);
+            }
             return;
         }
 
@@ -99,7 +110,18 @@ public class Help implements Runnable, Callable<Void> {
             if (name.equals(group.getName())) {
                 // general group help or specific command help?
                 if (commandNames.size() == 1) {
-                    new CommandGroupUsage().usage(global, group, out);
+                    if (USAGE_AS_HTML) {
+                        throw new UnsupportedOperationException("Command group usage not supported in HTML format");
+                    }
+                    else if (USAGE_AS_RONN) {
+                        throw new UnsupportedOperationException("Command group usage not supported in RONN format");
+                    }
+                    else if (USAGE_AS_MD) {
+                        out.append(new CommandGroupUsage().usageMD(global, group));
+                    }
+                    else {
+                        new CommandGroupUsage().usage(global, group, out);
+                    }
                     return;
                 }
                 else {

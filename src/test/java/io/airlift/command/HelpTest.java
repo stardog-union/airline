@@ -44,118 +44,378 @@ import static io.airlift.command.SingleCommand.singleCommand;
 @Test
 public class HelpTest
 {
-	@SuppressWarnings("unchecked")
-	public void testGit()
+    @SuppressWarnings("unchecked")
+    public void testGit()
     {
         CliBuilder<Runnable> builder = Cli.<Runnable>builder("git")
-                .withDescription("the stupid content tracker")
-                .withDefaultCommand(Help.class)
-                .withCommands(Help.class,
-                        Add.class);
+                                          .withDescription("the stupid content tracker")
+                                          .withDefaultCommand(Help.class)
+                                          .withCommands(Help.class,
+                                                        Add.class);
 
         builder.withGroup("remote")
-                .withDescription("Manage set of tracked repositories")
-                .withDefaultCommand(RemoteShow.class)
-                .withCommands(RemoteShow.class,
-                        RemoteAdd.class);
+               .withDescription("Manage set of tracked repositories")
+               .withDefaultCommand(RemoteShow.class)
+               .withCommands(RemoteShow.class,
+                             RemoteAdd.class);
 
         Cli<Runnable> gitParser = builder.build();
 
         StringBuilder out = new StringBuilder();
-        Help.help(gitParser.getMetadata(), ImmutableList.<String>of(), out);
+        Help.help(gitParser.getMetadata(), ImmutableList.of(), out);
         Assert.assertEquals(out.toString(), "usage: git [ -v ] <command> [ <args> ]\n" +
-                "\n" +
-                "Commands are:\n" +
-                "    add      Add file contents to the index\n" +
-                "    help     Display help information\n" +
-                "    remote   Manage set of tracked repositories\n" +
-                "\n" +
-                "See 'git help <command>' for more information on a specific command.\n");
+                                            "\n" +
+                                            "Commands are:\n" +
+                                            "    add      Add file contents to the index\n" +
+                                            "    help     Display help information\n" +
+                                            "    remote   Manage set of tracked repositories\n" +
+                                            "\n" +
+                                            "See 'git help <command>' for more information on a specific command.\n");
 
         out = new StringBuilder();
         Help.help(gitParser.getMetadata(), ImmutableList.of("add"), out);
         Assert.assertEquals(out.toString(), "NAME\n" +
-                "        git add - Add file contents to the index\n" +
-                "\n" +
-                "SYNOPSIS\n" +
-                "        git [ -v ] add [ -i ] [--] [ <patterns>... ]\n" +
-                "\n" +
-                "OPTIONS\n" +
-                "        -i\n" +
-                "            Add modified contents interactively.\n" +
-                "\n" +
-                "        -v\n" +
-                "            Verbose mode\n" +
-                "\n" +
-                "        --\n" +
-                "            This option can be used to separate command-line options from the\n" +
-                "            list of argument, (useful when arguments might be mistaken for\n" +
-                "            command-line options\n" +
-                "\n" +
-                "        <patterns>\n" +
-                "            Patterns of files to be added\n" +
-                "\n");
+                                            "        git add - Add file contents to the index\n" +
+                                            "\n" +
+                                            "SYNOPSIS\n" +
+                                            "        git [ -v ] add [ -i ] [--] [ <patterns>... ]\n" +
+                                            "\n" +
+                                            "OPTIONS\n" +
+                                            "        -i\n" +
+                                            "            Add modified contents interactively.\n" +
+                                            "\n" +
+                                            "        -v\n" +
+                                            "            Verbose mode\n" +
+                                            "\n" +
+                                            "        --\n" +
+                                            "            This option can be used to separate command-line options from the\n" +
+                                            "            list of argument, (useful when arguments might be mistaken for\n" +
+                                            "            command-line options\n" +
+                                            "\n" +
+                                            "        <patterns>\n" +
+                                            "            Patterns of files to be added\n" +
+                                            "\n");
 
         out = new StringBuilder();
         Help.help(gitParser.getMetadata(), ImmutableList.of("remote"), out);
         Assert.assertEquals(out.toString(), "NAME\n" +
-                "        git remote - Manage set of tracked repositories\n" +
-                "\n" +
-                "SYNOPSIS\n" +
-                "        git [ -v ] remote { add | show* } [--] [cmd-options] <cmd-args>\n" +
-                "\n" +
-                "        Where command-specific options [cmd-options] are:\n" +
-                "            add: [ -t <branch> ]\n" +
-                "            show: [ -n ]\n" +
-                "\n" +
-                "        Where command-specific arguments <cmd-args> are:\n" +
-                "            add: [ <name> <url>... ]\n" +
-                "            show: [ <remote> ]\n" +
-                "\n" +
-                "        * show is the default command\n" +
-                "        See 'git help remote <command>' for more information on a specific command.\n" +
-                "OPTIONS\n" +
-                "        -v\n" +
-                "            Verbose mode\n" +
-                "\n");
-//                "COMMANDS\n" +
-//                "        By default, Gives some information about the remote <name>\n" +
-//                "\n" +
-//                "        show\n" +
-//                "            Gives some information about the remote <name>\n" +
-//                "\n" +
-//                "            With -n option, Do not query remote heads\n" +
-//                "\n" +
-//                "        add\n" +
-//                "            Adds a remote\n" +
-//                "\n" +
-//                "            With -t option, Track only a specific branch\n" +
-//                "\n");
-        
+                                            "        git remote - Manage set of tracked repositories\n" +
+                                            "\n" +
+                                            "SYNOPSIS\n" +
+                                            "        git [ -v ] remote { add | show* } [--] [cmd-options] <cmd-args>\n" +
+                                            "\n" +
+                                            "        Where command-specific options [cmd-options] are:\n" +
+                                            "            add: [ -t <branch> ]\n" +
+                                            "            show: [ -n ]\n" +
+                                            "\n" +
+                                            "        Where command-specific arguments <cmd-args> are:\n" +
+                                            "            add: [ <name> <url>... ]\n" +
+                                            "            show: [ <remote> ]\n" +
+                                            "\n" +
+                                            "        * show is the default command\n" +
+                                            "        See 'git help remote <command>' for more information on a specific command.\n" +
+                                            "OPTIONS\n" +
+                                            "        -v\n" +
+                                            "            Verbose mode\n" +
+                                            "\n");
+
         out = new StringBuilder();
         Help.help(gitParser.getMetadata(), ImmutableList.of("remote", "add"), out);
         Assert.assertEquals(out.toString(), "NAME\n" +
-                "        git remote add - Adds a remote\n" +
-                "\n" +
-                "SYNOPSIS\n" +
-                "        git [ -v ] remote add [ -t <branch> ] [--] [ <name> <url>... ]\n" +
-                "\n" +
-                "OPTIONS\n" +
-                "        -t <branch>\n" +
-                "            Track only a specific branch\n" +
-                "\n" +
-                "        -v\n" +
-                "            Verbose mode\n" +
-                "\n" +
-                "        --\n" +
-                "            This option can be used to separate command-line options from the\n" +
-                "            list of argument, (useful when arguments might be mistaken for\n" +
-                "            command-line options\n" +
-                "\n" +
-                "        <name> <url>\n" +
-                "            Name and URL of remote repository to add\n" +
-                "\n"
-                );
+                                            "        git remote add - Adds a remote\n" +
+                                            "\n" +
+                                            "SYNOPSIS\n" +
+                                            "        git [ -v ] remote add [ -t <branch> ] [--] [ <name> <url>... ]\n" +
+                                            "\n" +
+                                            "OPTIONS\n" +
+                                            "        -t <branch>\n" +
+                                            "            Track only a specific branch\n" +
+                                            "\n" +
+                                            "        -v\n" +
+                                            "            Verbose mode\n" +
+                                            "\n" +
+                                            "        --\n" +
+                                            "            This option can be used to separate command-line options from the\n" +
+                                            "            list of argument, (useful when arguments might be mistaken for\n" +
+                                            "            command-line options\n" +
+                                            "\n" +
+                                            "        <name> <url>\n" +
+                                            "            Name and URL of remote repository to add\n" +
+                                            "\n"
+        );
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testGitMd()
+    {
+        CliBuilder<Runnable> builder = Cli.<Runnable>builder("git")
+                                          .withDescription("the stupid content tracker")
+                                          .withDefaultCommand(Help.class)
+                                          .withCommands(Help.class, Add.class);
+
+        builder.withGroup("remote")
+               .withDescription("Manage set of tracked repositories")
+               .withMarkdownDescription("Commands for managing tracked repositories. Read more about [Remote Management](../../git/with-it).")
+               .withDefaultCommand(RemoteShow.class)
+               .withCommands(RemoteShow.class, RemoteAdd.class);
+
+        Cli<Runnable> gitParser = builder.build();
+
+        Help.USAGE_AS_MD = true;
+        try {
+            StringBuilder out = new StringBuilder();
+
+            Help.help(gitParser.getMetadata(), ImmutableList.of("git"), out);
+            Assert.assertEquals(out.toString(),
+                                "---\n" +
+                                "layout: default\n" +
+                                "title: git\n" +
+                                "has_children: true\n" +
+                                "has_toc: false\n" +
+                                "description: This chapter contains details of all git CLI commands.\n" +
+                                "---\n" +
+                                "\n" +
+                                "# git\n" +
+                                "\n" +
+                                "the stupid content tracker\n" +
+                                "\n" +
+                                "Below you'll find all command groups in the `git` client. Select any of the command groups in the table below to view the specific commands in that command group.\n" +
+                                "\n" +
+                                "| Command Group | Description |\n" +
+                                "|---------------|-------------|\n" +
+                                "| [`remote`](./remote) | Manage set of tracked repositories |\n");
+
+            out = new StringBuilder();
+            Help.help(gitParser.getMetadata(), ImmutableList.of("add"), out);
+            Assert.assertEquals(out.toString(),
+                                "---\n" +
+                                "layout: default\n" +
+                                "title: null add\n" +
+                                "grand_parent: Stardog Admin CLI Reference\n" +
+                                "parent: null\n" +
+                                "description: 'Add file contents to the index'\n" +
+                                "---\n" +
+                                "\n" +
+                                "#  `git null add` \n" +
+                                "## Description\n" +
+                                "Add file contents to the index## Usage\n" +
+                                "`git [ -v ] add [ -i ] [--] [ <patterns>... ]`\n" +
+                                "{: .fs-5}\n" +
+                                "## Options\n" +
+                                "\n" +
+                                "Name, shorthand | Description \n" +
+                                "---|---\n" +
+                                "`-i` | Add modified contents interactively.\n" +
+                                "`-v` | Verbose mode\n" +
+                                "`--` | This option can be used to separate command-line options from the list of argument(s). (Useful when an argument might be mistaken for a command-line option)\n" +
+                                "`<patterns>` | Patterns of files to be added\n");
+
+            out = new StringBuilder();
+            Help.help(gitParser.getMetadata(), ImmutableList.of("remote"), out);
+            Assert.assertEquals(out.toString(),
+                                "---\n" +
+                                "layout: default\n" +
+                                "title: remote\n" +
+                                "parent: Stardog Admin CLI Reference\n" +
+                                "has_children: true\n" +
+                                "has_toc: false\n" +
+                                "description: This page contains the commands available in the git remote command group.\n" +
+                                "---\n" +
+                                "\n" +
+                                "# `remote`\n" +
+                                "\n" +
+                                "Commands for managing tracked repositories. Read more about [Remote Management](../../git/with-it).\n" +
+                                "\n" +
+                                "\n" +
+                                "Select any of the commands to view their manual page.\n" +
+                                "\n" +
+                                "| Command | Description |\n" +
+                                "|---------|-------------|\n" +
+                                "| [`remote add`](./remote-add) | Adds a remote |\n" +
+                                "| [`remote show`](./remote-show) | Gives some information about the remote <name> |\n");
+
+            out = new StringBuilder();
+            Help.help(gitParser.getMetadata(), ImmutableList.of("remote", "add"), out);
+            Assert.assertEquals(out.toString(),
+                                "---\n" +
+                                "layout: default\n" +
+                                "title: remote add\n" +
+                                "grand_parent: Stardog Admin CLI Reference\n" +
+                                "parent: remote\n" +
+                                "description: 'Adds a remote'\n" +
+                                "---\n" +
+                                "\n" +
+                                "#  `git remote add` \n" +
+                                "## Description\n" +
+                                "Adds a remote## Usage\n" +
+                                "`git [ -v ] remote  add [ -t <branch> ] [--] [ <name> <url>... ]`\n" +
+                                "{: .fs-5}\n" +
+                                "## Options\n" +
+                                "\n" +
+                                "Name, shorthand | Description \n" +
+                                "---|---\n" +
+                                "`-t <branch>` | Track only a specific branch\n" +
+                                "`-v` | Verbose mode\n" +
+                                "`--` | This option can be used to separate command-line options from the list of argument(s). (Useful when an argument might be mistaken for a command-line option)\n" +
+                                "`<name> <url>` | Name and URL of remote repository to add\n"
+            );
+        }
+        finally {
+            Help.USAGE_AS_MD = false;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testGitHtml()
+    {
+        CliBuilder<Runnable> builder = Cli.<Runnable>builder("git")
+                                          .withDescription("the stupid content tracker")
+                                          .withDefaultCommand(Help.class)
+                                          .withCommands(Help.class, Add.class);
+
+        builder.withGroup("remote")
+               .withDescription("Manage set of tracked repositories")
+               .withDefaultCommand(RemoteShow.class)
+               .withCommands(RemoteShow.class, RemoteAdd.class);
+
+        Cli<Runnable> gitParser = builder.build();
+
+        Help.USAGE_AS_HTML = true;
+        try {
+            StringBuilder out = new StringBuilder();
+            Help.help(gitParser.getMetadata(), ImmutableList.of("add"), out);
+            Assert.assertEquals(out.toString(),
+                                "<html>\n" +
+                                "<head>\n" +
+                                "<link href=\"css/bootstrap.min.css\" rel=\"stylesheet\" media=\"screen\">\n" +
+                                "</head>\n" +
+                                "<style>\n" +
+                                "    body { margin: 50px; }\n" +
+                                "</style>\n" +
+                                "<body>\n" +
+                                "<hr/>\n" +
+                                "<h1 class=\"text-info\">git null add Manual Page\n" +
+                                "<hr/>\n" +
+                                "<h1 class=\"text-info\">NAME</h1>\n" +
+                                "<br/>\n" +
+                                "<div class=\"row\"><div class=\"span8 offset1\">git null add &mdash;Add file contents to the index</div>\n" +
+                                "</div>\n" +
+                                "<br/>\n" +
+                                "<h1 class=\"text-info\">SYNOPSIS</h1>\n" +
+                                "<br/>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset1\">\n" +
+                                "git [ -v ] add [ -i ] [--] [ &lt;patterns&gt;... ]</div>\n" +
+                                "</div>\n" +
+                                "<br/>\n" +
+                                "<h1 class=\"text-info\">OPTIONS</h1>\n" +
+                                "<br/>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset1\">\n" +
+                                "-i</div>\n" +
+                                "</div>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset2\">\n" +
+                                "Add modified contents interactively.</div>\n" +
+                                "</div>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset1\">\n" +
+                                "-v</div>\n" +
+                                "</div>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset2\">\n" +
+                                "Verbose mode</div>\n" +
+                                "</div>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset1\">\n" +
+                                "--\n" +
+                                "</div>\n" +
+                                "</div>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset2\">\n" +
+                                "This option can be used to separate command-line options from the list of argument, (useful when arguments might be mistaken for command-line options\n" +
+                                "</div>\n" +
+                                "</div>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset1\">\n" +
+                                "&lt;patterns&gt;</div>\n" +
+                                "</div>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset2\">\n" +
+                                "Patterns of files to be added</div>\n" +
+                                "</div>\n" +
+                                "</body>\n" +
+                                "</html>\n");
+
+            out = new StringBuilder();
+            Help.help(gitParser.getMetadata(), ImmutableList.of("remote", "add"), out);
+            Assert.assertEquals(out.toString(),
+                                "<html>\n" +
+                                "<head>\n" +
+                                "<link href=\"css/bootstrap.min.css\" rel=\"stylesheet\" media=\"screen\">\n" +
+                                "</head>\n" +
+                                "<style>\n" +
+                                "    body { margin: 50px; }\n" +
+                                "</style>\n" +
+                                "<body>\n" +
+                                "<hr/>\n" +
+                                "<h1 class=\"text-info\">git remote add Manual Page\n" +
+                                "<hr/>\n" +
+                                "<h1 class=\"text-info\">NAME</h1>\n" +
+                                "<br/>\n" +
+                                "<div class=\"row\"><div class=\"span8 offset1\">git remote add &mdash;Adds a remote</div>\n" +
+                                "</div>\n" +
+                                "<br/>\n" +
+                                "<h1 class=\"text-info\">SYNOPSIS</h1>\n" +
+                                "<br/>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset1\">\n" +
+                                "git [ -v ] remote  add [ -t &lt;branch&gt; ] [--] [ &lt;name&gt; &lt;url&gt;... ]</div>\n" +
+                                "</div>\n" +
+                                "<br/>\n" +
+                                "<h1 class=\"text-info\">OPTIONS</h1>\n" +
+                                "<br/>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset1\">\n" +
+                                "-t &lt;branch&gt;</div>\n" +
+                                "</div>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset2\">\n" +
+                                "Track only a specific branch</div>\n" +
+                                "</div>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset1\">\n" +
+                                "-v</div>\n" +
+                                "</div>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset2\">\n" +
+                                "Verbose mode</div>\n" +
+                                "</div>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset1\">\n" +
+                                "--\n" +
+                                "</div>\n" +
+                                "</div>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset2\">\n" +
+                                "This option can be used to separate command-line options from the list of argument, (useful when arguments might be mistaken for command-line options\n" +
+                                "</div>\n" +
+                                "</div>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset1\">\n" +
+                                "&lt;name&gt; &lt;url&gt;</div>\n" +
+                                "</div>\n" +
+                                "<div class=\"row\">\n" +
+                                "<div class=\"span8 offset2\">\n" +
+                                "Name and URL of remote repository to add</div>\n" +
+                                "</div>\n" +
+                                "</body>\n" +
+                                "</html>\n"
+            );
+        }
+        finally {
+            Help.USAGE_AS_HTML = false;
+        }
     }
 
     @Test
@@ -451,8 +711,7 @@ public class HelpTest
         CliBuilder<Object> builder = buildCli("test", Object.class)
                 .withDescription("Test commandline")
                 .withDefaultCommand(Help.class)
-                .withCommands(Help.class,
-                        GlobalOptionsHidden.class);
+                .withCommands(Help.class, GlobalOptionsHidden.class);
 
         Cli<Object> parser = builder.build();
 
@@ -482,7 +741,7 @@ public class HelpTest
         Cli<Object> parser = builder.build();
 
         StringBuilder out = new StringBuilder();
-        Help.help(parser.getMetadata(), ImmutableList.<String>of(), out);
+        Help.help(parser.getMetadata(), ImmutableList.of(), out);
         Assert.assertEquals(out.toString(), "usage: test <command> [ <args> ]\n" +
                 "\n" +
                 "Commands are:\n" +
@@ -513,7 +772,7 @@ public class HelpTest
             .build();
 
         StringBuilder out = new StringBuilder();
-        Help.help(parser.getMetadata(), ImmutableList.<String>of("remove"), out);
+        Help.help(parser.getMetadata(), ImmutableList.of("remove"), out);
 
         String discussion = "DISCUSSION\n" +
         "        More details about how this removes files from the index.\n" +
@@ -590,7 +849,7 @@ public class HelpTest
             Assert.fail("Exception should have been thrown for unknown command");
         }
         catch (UnsupportedOperationException e) {
-            Assert.assertEquals("Unknown command asdf", e.getMessage());
+            Assert.assertEquals(e.getMessage(), "Unknown command asdf");
         }
     }
 }
