@@ -497,7 +497,7 @@ public class CommandUsage
 
         aBuilder.append("# ").append(" `").append(programName).append(" ").append(groupName).append(" ").append(command.getName()).append("` ").append("\n");
         aBuilder.append("## Description\n");
-        aBuilder.append(command.getDescription());
+        aBuilder.append(command.getDescription()).append("\n");
         aBuilder.append("## Usage\n`");
         List<OptionMetadata> options = newArrayList();
         if (programName != null) {

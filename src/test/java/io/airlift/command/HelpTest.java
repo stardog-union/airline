@@ -198,7 +198,8 @@ public class HelpTest
                                 "\n" +
                                 "#  `git null add` \n" +
                                 "## Description\n" +
-                                "Add file contents to the index## Usage\n" +
+                                "Add file contents to the index\n" +
+                                "## Usage\n" +
                                 "`git [ -v ] add [ -i ] [--] [ <patterns>... ]`\n" +
                                 "{: .fs-5}\n" +
                                 "## Options\n" +
@@ -247,7 +248,8 @@ public class HelpTest
                                 "\n" +
                                 "#  `git remote add` \n" +
                                 "## Description\n" +
-                                "Adds a remote## Usage\n" +
+                                "Adds a remote\n" +
+                                "## Usage\n" +
                                 "`git [ -v ] remote  add [ -t <branch> ] [--] [ <name> <url>... ]`\n" +
                                 "{: .fs-5}\n" +
                                 "## Options\n" +
