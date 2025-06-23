@@ -1,18 +1,24 @@
 package io.airlift.command.model;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-
 import com.google.common.base.Supplier;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.Sets;
 import io.airlift.command.Accessor;
 import io.airlift.command.Arguments;
 import io.airlift.command.Command;
@@ -22,33 +28,19 @@ import io.airlift.command.Option;
 import io.airlift.command.OptionType;
 import io.airlift.command.Suggester;
 
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import static com.google.common.base.Predicates.compose;
 import static com.google.common.base.Predicates.equalTo;
 import static com.google.common.collect.Iterables.find;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.collect.Maps.newHashMap;
 
 public class MetadataLoader
 {
     public static GlobalMetadata loadGlobal(String name,
-            String description,
-            CommandMetadata defaultCommand,
-            Iterable<CommandMetadata> defaultGroupCommands,
-            Iterable<CommandGroupMetadata> groups)
+                                            Integer navOrder, String description,
+                                            CommandMetadata defaultCommand,
+                                            Iterable<CommandMetadata> defaultGroupCommands,
+                                            Iterable<CommandGroupMetadata> groups)
     {
         ImmutableList.Builder<OptionMetadata> globalOptionsBuilder = ImmutableList.builder();
         if (defaultCommand != null) {
@@ -63,10 +55,10 @@ public class MetadataLoader
             }
         }
         List<OptionMetadata> globalOptions = mergeOptionSet(globalOptionsBuilder.build());
-        return new GlobalMetadata(name, description, globalOptions, defaultCommand, defaultGroupCommands, groups);
+        return new GlobalMetadata(name, navOrder, description, globalOptions, defaultCommand, defaultGroupCommands, groups);
     }
 
-    public static CommandGroupMetadata loadCommandGroup(String name, String description, CommandMetadata defaultCommand, Iterable<CommandMetadata> commands)
+    public static CommandGroupMetadata loadCommandGroup(String name, String description, String markdownDescription, CommandMetadata defaultCommand, Iterable<CommandMetadata> commands)
     {
         ImmutableList.Builder<OptionMetadata> groupOptionsBuilder = ImmutableList.builder();
         if (defaultCommand != null) {
@@ -76,18 +68,12 @@ public class MetadataLoader
             groupOptionsBuilder.addAll(command.getGroupOptions());
         }
         List<OptionMetadata> groupOptions = mergeOptionSet(groupOptionsBuilder.build());
-        return new CommandGroupMetadata(name, description, groupOptions, defaultCommand, commands);
+        return new CommandGroupMetadata(name, description, markdownDescription, groupOptions, defaultCommand, commands);
     }
 
     public static <T> ImmutableList<CommandMetadata> loadCommands(Iterable<Class<? extends T>> defaultCommands)
     {
-        return ImmutableList.copyOf(Iterables.transform(defaultCommands, new Function<Class<?>, CommandMetadata>()
-        {
-            public CommandMetadata apply(Class<?> commandType)
-            {
-                return loadCommand(commandType);
-            }
-        }));
+        return ImmutableList.copyOf(Iterables.transform(defaultCommands, (Function<Class<?>, CommandMetadata>) MetadataLoader::loadCommand));
     }
 
     public static CommandMetadata loadCommand(Class<?> commandType)
@@ -120,22 +106,19 @@ public class MetadataLoader
 
         InjectionMetadata injectionMetadata = loadInjectionMetadata(commandType);
 
-        CommandMetadata commandMetadata = new CommandMetadata(
-                name,
-                description,
-                command.discussion().isEmpty() ? null : command.discussion(),
-                command.examples().length == 0 ? null : Lists.newArrayList(command.examples()),
-                hidden, injectionMetadata.globalOptions,
-                injectionMetadata.groupOptions,
-                injectionMetadata.commandOptions,
-                Iterables.getFirst(injectionMetadata.arguments, null),
-                injectionMetadata.metadataInjections,
-                commandType,
-                groupNames,
-                groups);
-
-        return commandMetadata;
-
+	    return new CommandMetadata(
+	            name,
+	            description,
+	            command.discussion().isEmpty() ? null : command.discussion(),
+	            command.examples().length == 0 ? null : Lists.newArrayList(command.examples()),
+	            hidden, injectionMetadata.globalOptions,
+	            injectionMetadata.groupOptions,
+	            injectionMetadata.commandOptions,
+	            Iterables.getFirst(injectionMetadata.arguments, null),
+	            injectionMetadata.metadataInjections,
+	            commandType,
+	            groupNames,
+	            groups);
     }
 
     public static SuggesterMetadata loadSuggester(Class<? extends Suggester> suggesterClass)
@@ -147,7 +130,7 @@ public class MetadataLoader
     public static InjectionMetadata loadInjectionMetadata(Class<?> type)
     {
         InjectionMetadata injectionMetadata = new InjectionMetadata();
-        loadInjectionMetadata(type, injectionMetadata, ImmutableList.<Field>of());
+        loadInjectionMetadata(type, injectionMetadata, ImmutableList.of());
         injectionMetadata.compact();
         return injectionMetadata;
     }
@@ -250,9 +233,9 @@ public class MetadataLoader
 
                 Arguments argumentsAnnotation = field.getAnnotation(Arguments.class);
                 if (field.isAnnotationPresent(Arguments.class)) {
-                    ImmutableList.Builder<String> titlesBuilder = ImmutableList.<String>builder();
+                    ImmutableList.Builder<String> titlesBuilder = ImmutableList.builder();
                     
-                    if (!(argumentsAnnotation.title().length == 1 && argumentsAnnotation.title()[0].equals(""))) {
+                    if (!(argumentsAnnotation.title().length == 1 && argumentsAnnotation.title()[0].isEmpty())) {
                         titlesBuilder.add(argumentsAnnotation.title());
                     }
                     else {
@@ -272,19 +255,12 @@ public class MetadataLoader
     private static List<OptionMetadata> mergeOptionSet(List<OptionMetadata> options)
     {
 //        ListMultimap<OptionMetadata, OptionMetadata> metadataIndex = ArrayListMultimap.create();
-        Multimap<OptionMetadata, OptionMetadata> metadataIndex = Multimaps.newMultimap(Maps.<OptionMetadata, Collection<OptionMetadata>>newLinkedHashMap(), new Supplier<List<OptionMetadata>>() { public List<OptionMetadata> get() { return Lists.newArrayList(); } } );
+        Multimap<OptionMetadata, OptionMetadata> metadataIndex = Multimaps.newMultimap(Maps.newLinkedHashMap(), (Supplier<List<OptionMetadata>>) Lists::newArrayList);
         for (OptionMetadata option : options) {
             metadataIndex.put(option, option);
         }
 
-        options = ImmutableList.copyOf(transform(metadataIndex.asMap().values(), new Function<Collection<OptionMetadata>, OptionMetadata>()
-        {
-            @Override
-            public OptionMetadata apply(@Nullable Collection<OptionMetadata> options)
-            {
-                return new OptionMetadata(options);
-            }
-        }));
+        options = ImmutableList.copyOf(transform(metadataIndex.asMap().values(), OptionMetadata::new));
 
         Map<String, OptionMetadata> optionIndex = Maps.newLinkedHashMap();
         for (OptionMetadata option : options) {
@@ -309,7 +285,7 @@ public class MetadataLoader
 
     public static void loadCommandsIntoGroupsByAnnotation(List<CommandMetadata> allCommands, List<CommandGroupMetadata> commandGroups, List<CommandMetadata> defaultCommandGroup)
     {
-        List<CommandMetadata> newCommands = new ArrayList<CommandMetadata>();
+        List<CommandMetadata> newCommands = new ArrayList<>();
 
         // first, create any groups explicitly annotated
         createGroupsFromAnnotations(allCommands,newCommands,commandGroups,defaultCommandGroup);
@@ -329,7 +305,7 @@ public class MetadataLoader
                 {
                     ImmutableList.Builder<OptionMetadata> groupOptionsBuilder = ImmutableList.builder();
                     groupOptionsBuilder.addAll(command.getGroupOptions());
-                    CommandGroupMetadata newGroup = loadCommandGroup(groupName,"",null, Collections.singletonList(command));
+	                CommandGroupMetadata newGroup = loadCommandGroup(groupName, "", null, null, Collections.singletonList(command));
                     commandGroups.add(newGroup);
                     added = true;
                 }
@@ -368,8 +344,8 @@ public class MetadataLoader
                 }
 
                 //load other commands if needed
-                List<CommandMetadata> groupCommands = new ArrayList<CommandMetadata>(groupAnno.commands().length);
-                CommandMetadata groupCommand = null;
+                List<CommandMetadata> groupCommands = new ArrayList<>(groupAnno.commands().length);
+                CommandMetadata groupCommand;
                 for(Class commandClass : groupAnno.commands())
                 {
                     groupCommand = find(allCommands, compose(equalTo(commandClass), CommandMetadata.typeGetter()), null);
@@ -384,7 +360,7 @@ public class MetadataLoader
                 CommandGroupMetadata groupMetadata = find(commandGroups, compose(equalTo(groupAnno.name()), CommandGroupMetadata.nameGetter()), null);
                 if(null == groupMetadata)
                 {
-                    groupMetadata = loadCommandGroup(groupAnno.name(),groupAnno.description(),defaultCommand, groupCommands);
+	                groupMetadata = loadCommandGroup(groupAnno.name(), groupAnno.description(), null, defaultCommand, groupCommands);
                     commandGroups.add(groupMetadata);
                 }
 

@@ -144,23 +144,11 @@ public class CommandMetadata
 
     public static Function<CommandMetadata, String> nameGetter()
     {
-        return new Function<CommandMetadata, String>()
-        {
-            public String apply(CommandMetadata input)
-            {
-                return input.getName();
-            }
-        };
+        return CommandMetadata::getName;
     }
 
     public static Function<CommandMetadata, Class> typeGetter()
     {
-        return new Function<CommandMetadata, Class>()
-        {
-            public Class<?> apply(CommandMetadata input)
-            {
-                return input.getType();
-            }
-        };
+        return CommandMetadata::getType;
     }
 }

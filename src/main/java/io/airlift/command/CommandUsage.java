@@ -12,7 +12,6 @@ import io.airlift.command.model.CommandMetadata;
 import io.airlift.command.model.OptionMetadata;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -51,11 +50,11 @@ public class CommandUsage
     {
         StringBuilder stringBuilder = new StringBuilder();
         usage(programName, groupName, commandName, command, stringBuilder);
-        System.out.println(stringBuilder.toString());
+        System.out.println(stringBuilder);
     }
 
     /**
-     * Store the help in the passed string builder.
+     * Store the help in the passed-in string builder.
      */
     public void usage(@Nullable String programName, @Nullable String groupName, String commandName, CommandMetadata command, StringBuilder out)
     {
@@ -107,7 +106,7 @@ public class CommandUsage
         //
         // OPTIONS
         //
-        if (options.size() > 0 || arguments != null) {
+        if (!options.isEmpty() || arguments != null) {
             options = sortOptions(options);
 
             out.append("OPTIONS").newline();
@@ -168,14 +167,14 @@ public class CommandUsage
 
     private List<OptionMetadata> sortOptions(List<OptionMetadata> options) {
         if (optionComparator != null) {
-            options = new ArrayList<OptionMetadata>(options);
-            Collections.sort(options, optionComparator);
+            options = new ArrayList<>(options);
+            options.sort(optionComparator);
         }
         return options;
     }
 
     public String usageRonn(@Nullable String programName, @Nullable String groupName, CommandMetadata command) {
-        final StringBuilder aBuilder = new StringBuilder("");
+        final StringBuilder aBuilder = new StringBuilder();
 
         final String NEW_PARA = "\n\n";
 
@@ -209,7 +208,7 @@ public class CommandUsage
         if (programName != null) {
             aBuilder.append("`").append(programName).append("`");
             aOptions = command.getGlobalOptions();
-            if (aOptions != null && aOptions.size() > 0) {
+            if (aOptions != null && !aOptions.isEmpty()) {
                 aBuilder.append(" ").append(Joiner.on(" ").join(toSynopsisUsage(sortOptions(aOptions))));
                 options.addAll(aOptions);
             }
@@ -217,7 +216,7 @@ public class CommandUsage
         if (groupName != null) {
             aBuilder.append(" `").append(groupName).append("`");
             aOptions = command.getGroupOptions();
-            if (aOptions != null && aOptions.size() > 0) {
+            if (aOptions != null && !aOptions.isEmpty()) {
                 aBuilder.append(" ").append(Joiner.on(" ").join(toSynopsisUsage(sortOptions(aOptions))));
                 options.addAll(aOptions);
             }
@@ -237,8 +236,7 @@ public class CommandUsage
             aBuilder.append(NEW_PARA).append("## DESCRIPTION").append(NEW_PARA).append(aLongDesc);
         }
 
-
-        if (options.size() > 0 || arguments != null) {
+        if (!options.isEmpty() || arguments != null) {
             aBuilder.append(NEW_PARA).append("## OPTIONS");
             options = sortOptions(options);
 
@@ -297,7 +295,7 @@ public class CommandUsage
     }
 
     public String usageHTML(@Nullable String programName, @Nullable String groupName, CommandMetadata command) {
-        final StringBuilder aBuilder = new StringBuilder("");
+        final StringBuilder aBuilder = new StringBuilder();
 
         final String NEWLINE = "<br/>\n";
         // TODO need boostrap css
@@ -362,7 +360,7 @@ public class CommandUsage
         //
         // OPTIONS
         //
-        if (options.size() > 0 || arguments != null) {
+        if (!options.isEmpty() || arguments != null) {
             options = sortOptions(options);
 
             aBuilder.append(NEWLINE);
@@ -479,16 +477,14 @@ public class CommandUsage
 
     public String usageMD(@Nullable String programName, @Nullable String groupName, CommandMetadata command) {
 
-        final StringBuilder aBuilder = new StringBuilder("");
-        final String br = "<br>";
-        final String np = "<br>\n"; //new paragraph
+        final StringBuilder aBuilder = new StringBuilder();
 
         // for jekyll to pick up these pages on the website
         aBuilder.append("---\n");
         aBuilder.append("layout: default\n");
         aBuilder.append("title: ").append(groupName).append(" ").append(command.getName()).append("\n");
 
-        if (programName.equals("stardog")){
+        if ("stardog".equals(programName)){
             aBuilder.append("grand_parent: ").append("Stardog CLI Reference\n");
         }
         else {
@@ -501,7 +497,7 @@ public class CommandUsage
 
         aBuilder.append("# ").append(" `").append(programName).append(" ").append(groupName).append(" ").append(command.getName()).append("` ").append("\n");
         aBuilder.append("## Description\n");
-        aBuilder.append(command.getDescription()).append(np);
+        aBuilder.append(command.getDescription()).append("\n");
         aBuilder.append("## Usage\n`");
         List<OptionMetadata> options = newArrayList();
         if (programName != null) {
@@ -524,7 +520,7 @@ public class CommandUsage
         }
         aBuilder.append("`\n{: .fs-5}\n");
 
-        if (options.size() > 0 || arguments != null) {
+        if (!options.isEmpty() || arguments != null) {
             options = sortOptions(options);
             aBuilder.append("## Options\n\n");
             aBuilder.append("Name, shorthand | Description \n");
@@ -580,7 +576,7 @@ public class CommandUsage
         return aBuilder.toString();
     }
 
-    private static final String htmlize(final String theStr) {
+    private static String htmlize(final String theStr) {
         return theStr.replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\n", "<br/>");
     }
 }

@@ -9,7 +9,6 @@ import com.google.common.collect.Iterables;
 import io.airlift.command.model.CommandGroupMetadata;
 import io.airlift.command.model.CommandMetadata;
 import io.airlift.command.model.GlobalMetadata;
-import io.airlift.command.model.OptionMetadata;
 
 import java.util.Collection;
 import java.util.List;
@@ -42,11 +41,11 @@ public class GlobalUsageSummary
     {
         StringBuilder stringBuilder = new StringBuilder();
         usage(global, stringBuilder);
-        System.out.println(stringBuilder.toString());
+        System.out.println(stringBuilder);
     }
 
     /**
-     * Store the help in the passed string builder.
+     * Store the help in the passed-in string builder.
      */
     public void usage(GlobalMetadata global, StringBuilder out)
     {
@@ -61,16 +60,12 @@ public class GlobalUsageSummary
 
         // build arguments
         List<String> commandArguments = newArrayList();
-        Collection<String> args = Collections2.transform(global.getOptions(), new Function<OptionMetadata, String>()
-        {
-            public String apply(OptionMetadata option)
+        Collection<String> args = Collections2.transform(global.getOptions(), option -> {
+            if (option.isHidden())
             {
-                if (option.isHidden())
-                {
-                    return "";
-                }
-                return toUsage(option);
+                return "";
             }
+            return toUsage(option);
         });
         
         commandArguments.addAll(args);
@@ -97,13 +92,7 @@ public class GlobalUsageSummary
         }
 
         out.append("Commands are:").newline();
-        out.newIndentedPrinter(4).appendTable(Iterables.transform(commands.entrySet(), new Function<Entry<String, String>, Iterable<String>>()
-        {
-            public Iterable<String> apply(Entry<String, String> entry)
-            {
-                return ImmutableList.of(entry.getKey(), MoreObjects.firstNonNull(entry.getValue(), ""));
-            }
-        }));
+        out.newIndentedPrinter(4).appendTable(Iterables.transform(commands.entrySet(), (Function<Entry<String, String>, Iterable<String>>) entry -> ImmutableList.of(entry.getKey(), MoreObjects.firstNonNull(entry.getValue(), ""))));
         out.newline();
         out.append("See").append("'" + global.getName()).append("help <command>' for more information on a specific command.").newline();
     }

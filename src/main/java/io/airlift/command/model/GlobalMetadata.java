@@ -7,6 +7,7 @@ import java.util.List;
 public class GlobalMetadata
 {
     private final String name;
+    private final Integer navOrder;
     private final String description;
     private final List<OptionMetadata> options;
     private final CommandMetadata defaultCommand;
@@ -14,13 +15,25 @@ public class GlobalMetadata
     private final List<CommandGroupMetadata> commandGroups;
 
     public GlobalMetadata(String name,
-            String description,
-            Iterable<OptionMetadata> options,
-            CommandMetadata defaultCommand,
-            Iterable<CommandMetadata> defaultGroupCommands,
-            Iterable<CommandGroupMetadata> commandGroups)
+                          String description,
+                          Iterable<OptionMetadata> options,
+                          CommandMetadata defaultCommand,
+                          Iterable<CommandMetadata> defaultGroupCommands,
+                          Iterable<CommandGroupMetadata> commandGroups)
+    {
+        this(name, null, description, options, defaultCommand, defaultGroupCommands, commandGroups);
+    }
+
+    public GlobalMetadata(String name,
+                          Integer navOrder,
+                          String description,
+                          Iterable<OptionMetadata> options,
+                          CommandMetadata defaultCommand,
+                          Iterable<CommandMetadata> defaultGroupCommands,
+                          Iterable<CommandGroupMetadata> commandGroups)
     {
         this.name = name;
+        this.navOrder = navOrder;
         this.description = description;
         this.options = ImmutableList.copyOf(options);
         this.defaultCommand = defaultCommand;
@@ -48,6 +61,9 @@ public class GlobalMetadata
         return defaultCommand;
     }
 
+    /**
+     * Returns commands belonging to the default (command) group.
+     */
     public List<CommandMetadata> getDefaultGroupCommands()
     {
         return defaultGroupCommands;
@@ -71,5 +87,9 @@ public class GlobalMetadata
         sb.append(", commandGroups=").append(commandGroups);
         sb.append('}');
         return sb.toString();
+    }
+
+    public Integer getNavOrder() {
+        return navOrder;
     }
 }

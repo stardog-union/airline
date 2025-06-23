@@ -10,15 +10,17 @@ public class CommandGroupMetadata
 {
     private final String name;
     private final String description;
-    private final List<OptionMetadata> options;
+	private final String markdownDescription;
+	private final List<OptionMetadata> options;
     private final CommandMetadata defaultCommand;
     private final List<CommandMetadata> commands;
 
-    public CommandGroupMetadata(String name, String description, Iterable<OptionMetadata> options, CommandMetadata defaultCommand, Iterable<CommandMetadata> commands)
+    public CommandGroupMetadata(String name, String description, String markdownDescription, Iterable<OptionMetadata> options, CommandMetadata defaultCommand, Iterable<CommandMetadata> commands)
     {
         this.name = name;
         this.description = description;
-        this.options = ImmutableList.copyOf(options);
+        this.markdownDescription = markdownDescription;
+	    this.options = ImmutableList.copyOf(options);
         this.defaultCommand = defaultCommand;
         this.commands = Lists.newArrayList(commands);
     }
@@ -31,6 +33,11 @@ public class CommandGroupMetadata
     public String getDescription()
     {
         return description;
+    }
+
+    public String getMarkdownDescription()
+    {
+        return markdownDescription;
     }
 
     public List<OptionMetadata> getOptions()
@@ -63,6 +70,9 @@ public class CommandGroupMetadata
         sb.append("CommandGroupMetadata");
         sb.append("{name='").append(name).append('\'');
         sb.append(", description='").append(description).append('\'');
+        if (markdownDescription != null) {
+            sb.append(", markdownDescription='").append(markdownDescription).append('\'');
+        }
         sb.append(", options=").append(options);
         sb.append(", defaultCommand=").append(defaultCommand);
         sb.append(", commands=").append(commands);
@@ -72,12 +82,6 @@ public class CommandGroupMetadata
 
     public static Function<CommandGroupMetadata, String> nameGetter()
     {
-        return new Function<CommandGroupMetadata, String>()
-        {
-            public String apply(CommandGroupMetadata input)
-            {
-                return input.getName();
-            }
-        };
+        return CommandGroupMetadata::getName;
     }
 }
